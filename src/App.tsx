@@ -12,14 +12,16 @@ import AssessmentBuilder from "./pages/AssessmentBuilder";
 import AssessmentPreview from "./pages/AssessmentPreview"; // --- IMPORT ADDED BACK ---
 import { Layout } from "./components/Layout";
 
+import Dashboard from "./pages/Dashboard";
 const queryClient = new QueryClient();
 
 const AppLayout = () => (
   <Layout>
     <Routes>
-      <Route path="/" element={<Navigate to="/jobs" replace />} /> 
+     <Route path="/" element={<Dashboard />} />
       
       <Route path="/jobs" element={<Jobs />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/candidates" element={<Candidates />} />
       <Route path="/candidates/:id" element={<CandidateDetail />} />
       <Route path="/assessments" element={<Assessments />} />

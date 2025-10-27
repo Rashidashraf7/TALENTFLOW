@@ -1,102 +1,141 @@
-import { useDroppable } from '@dnd-kit/core';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Eye, GripVertical } from 'lucide-react'; // Import GripVertical
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Candidate } from '@/lib/db';
+"use client"
 
-function DraggableCandidate({ candidate, onView }: { candidate: Candidate; onView: () => void }) {
-  const {
-    attributes, // Keep attributes for accessibility
-    listeners,  // These are the drag listeners
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: candidate.id });
+import { useDroppable } from "@dnd-kit/core"
+import { Card, CardContent } from "./ui/card"
+import { Button } from "./ui/button"
+import { Eye } from "lucide-react"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import type { Candidate } from "@/lib/db"
+import { cn } from "@/lib/utils"
+import React from "react"
+
+// --- Draggable Candidate Card ---
+const DraggableCandidate = React.forwardRef<
+  HTMLDivElement,
+  {
+    candidate: Candidate
+    onView: () => void
+    style: React.CSSProperties
+    attributes: any
+    listeners: any
+  }
+>(({ candidate, onView, style, attributes, listeners }, ref) => {
+  return (
+    <Card
+      ref={ref}
+      style={style}
+      className={cn(
+        "cursor-grab overflow-hidden rounded-lg border border-border/30 bg-card shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 ease-in-out",
+        "touch-none",
+      )}
+      {...attributes}
+      {...listeners}
+    >
+      <CardContent className="p-3 flex items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm text-foreground truncate">{candidate.name}</p>
+          <p className="text-xs text-muted-foreground/70 truncate mt-1">{candidate.email}</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 flex-shrink-0 text-muted-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation()
+            onView()
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          aria-label={`View ${candidate.name}`}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+      </CardContent>
+    </Card>
+  )
+})
+DraggableCandidate.displayName = "DraggableCandidate"
+
+const SortableCandidate = ({
+  candidate,
+  onViewCandidate,
+}: {
+  candidate: Candidate
+  onViewCandidate: (id: string) => void
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: candidate.id,
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition || "transform 250ms ease, opacity 250ms ease",
     opacity: isDragging ? 0.8 : 1,
-    zIndex: isDragging ? 10 : 0,
-  };
+    zIndex: isDragging ? 10 : ("auto" as const),
+  }
 
   return (
-    // REMOVED listeners and attributes from the main Card
-    <Card
+    <DraggableCandidate
       ref={setNodeRef}
+      candidate={candidate}
+      onView={() => onViewCandidate(candidate.id)}
       style={style}
-      className="hover:shadow-md transition-shadow touch-none bg-card" // Ensure background color
-    >
-      {/* Moved content into a flex container */}
-      <CardContent className="p-3 flex items-start gap-2">
-        {/* Column 1: Main Content */}
-        <div className="flex-grow space-y-1">
-          <h4 className="font-medium text-sm">{candidate.name}</h4>
-          <p className="text-xs text-muted-foreground truncate">{candidate.email}</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-xs h-7" // Adjusted size/padding
-            onClick={onView} // Keep simple onClick, separation should fix it
-          >
-            <Eye className="h-3 w-3 mr-1" />
-            View Profile
-          </Button>
-        </div>
-        {/* Column 2: Drag Handle */}
-        {/* Apply listeners ONLY to this handle */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="cursor-grab p-1 flex-shrink-0" // Make handle easy to grab
-          aria-label="Drag handle"
-        >
-          <GripVertical className="h-5 w-5 text-muted-foreground" />
-        </div>
-      </CardContent>
-    </Card>
-  );
+      attributes={attributes}
+      listeners={listeners}
+    />
+  )
 }
 
+// --- Kanban Column ---
 export function KanbanColumn({
   id,
   title,
   candidates,
   onViewCandidate,
 }: {
-  id: string;
-  title: string;
-  candidates: Candidate[];
-  onViewCandidate: (id: string) => void;
+  id: string
+  title: string
+  candidates: Candidate[]
+  onViewCandidate: (id: string) => void
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id });
+  const { setNodeRef, isOver } = useDroppable({ id })
 
   return (
-    <div ref={setNodeRef} className="flex flex-col h-full min-w-[280px]">
-      <Card className={`flex-1 flex flex-col ${isOver ? 'ring-2 ring-primary' : ''}`}>
-        <CardHeader className="pb-3 flex-shrink-0">
-          <CardTitle className="text-sm font-medium flex items-center justify-between">
-            <span>{title}</span>
-            <span className="text-muted-foreground">({candidates.length})</span>
-          </CardTitle>
-        </CardHeader>
-        {/* Still keep padding and flex-grow here */}
-        <CardContent className="space-y-2 max-h-[600px] overflow-y-auto p-2 flex-grow">
-          {candidates.map((candidate) => (
-            <DraggableCandidate
-              key={candidate.id}
-              candidate={candidate}
-              onView={() => onViewCandidate(candidate.id)}
-            />
-          ))}
-          {candidates.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">No candidates</p>
-          )}
-        </CardContent>
-      </Card>
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "flex flex-col rounded-xl bg-muted/30 backdrop-blur-xs",
+        "p-4 w-[340px] max-w-sm min-h-[500px] mx-3",
+        "border border-border/30 shadow-xs hover:shadow-sm transition-all",
+        isOver && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+      )}
+    >
+      <div className="flex items-center justify-between mb-3 px-0.5">
+        <h3 className="text-sm font-semibold text-foreground truncate">{title}</h3>
+        <span className="rounded-full bg-primary/8 px-2 py-0.5 text-xs font-medium text-primary/80">
+          {candidates.length}
+        </span>
+      </div>
+
+      {/* Candidate List */}
+      <div className="flex-grow space-y-2 overflow-y-auto pr-1 pb-1 custom-scrollbar">
+        {candidates.map((candidate) => (
+          <SortableCandidate key={candidate.id} candidate={candidate} onViewCandidate={onViewCandidate} />
+        ))}
+
+        {/* Empty State */}
+        {candidates.length === 0 && (
+          <div
+            className={cn(
+              "flex h-32 items-center justify-center rounded-lg border-2 border-dashed text-sm",
+              isOver ? "border-primary/40 bg-primary/5 text-primary/70" : "border-border/40 text-muted-foreground/60",
+            )}
+          >
+            {isOver ? "Release to drop" : "Drop candidates here"}
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }

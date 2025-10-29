@@ -174,9 +174,6 @@ export default function Jobs() {
       setJobOrder(previousJobOrder); // Revert UI to the last known good state
     },
   });
-
-  // --- Handlers ---
-
   const handleSaveJob = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);

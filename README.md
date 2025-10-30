@@ -101,7 +101,7 @@ This project's architecture is designed to *simulate* a modern, high-performance
 ## 🗺️ Known Issues & Future Improvements
 
 * **Known Issues:**
-    * (List any bugs you didn't get to fix. e.g., "The file upload stub in the assessment builder is UI-only and does not store the file.")
+    * ("The file upload stub in the assessment builder is UI-only and does not store the file.")
 * **Future Improvements:**
     * **Unit & Integration Testing:** Add tests for `react-hook-form` logic and React Query mutations using Vitest and React Testing Library.
     * **WebSockets:** Implement a mock WebSocket for real-time updates (e.g., another user moves a candidate).
